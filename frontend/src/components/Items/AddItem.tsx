@@ -11,7 +11,7 @@ import { useState } from "react"
 import { type SubmitHandler, useForm } from "react-hook-form"
 import { FaPlus } from "react-icons/fa"
 
-import { type ItemCreate, ItemsService } from "@/client"
+import { type TodoCreate, TodosService } from "@/client"
 import type { ApiError } from "@/client/core/ApiError"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
@@ -26,7 +26,7 @@ import {
 } from "../ui/dialog"
 import { Field } from "../ui/field"
 
-const AddItem = () => {
+const AddTodo = () => {
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast } = useCustomToast()
@@ -35,20 +35,23 @@ const AddItem = () => {
     handleSubmit,
     reset,
     formState: { errors, isValid, isSubmitting },
-  } = useForm<ItemCreate>({
+  } = useForm<TodoCreate>({
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
       title: "",
       description: "",
+      priority: "medium",
+      status: "pending",
+      due_date: null,
     },
   })
 
   const mutation = useMutation({
-    mutationFn: (data: ItemCreate) =>
-      ItemsService.createItem({ requestBody: data }),
+    mutationFn: (data: TodoCreate) =>
+      TodosService.createTodo({ requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("Item created successfully.")
+      showSuccessToast("Todo created successfully.")
       reset()
       setIsOpen(false)
     },
@@ -56,11 +59,11 @@ const AddItem = () => {
       handleError(err)
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["items"] })
+      queryClient.invalidateQueries({ queryKey: ["todos"] })
     },
   })
 
-  const onSubmit: SubmitHandler<ItemCreate> = (data) => {
+  const onSubmit: SubmitHandler<TodoCreate> = (data) => {
     mutation.mutate(data)
   }
 
@@ -72,18 +75,18 @@ const AddItem = () => {
       onOpenChange={({ open }) => setIsOpen(open)}
     >
       <DialogTrigger asChild>
-        <Button value="add-item" my={4}>
+        <Button value="add-todo" my={4}>
           <FaPlus fontSize="16px" />
-          Add Item
+          Add Todo
         </Button>
       </DialogTrigger>
       <DialogContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Add Item</DialogTitle>
+            <DialogTitle>Add Todo</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            <Text mb={4}>Fill in the details to add a new item.</Text>
+            <Text mb={4}>Fill in the details to add a new todo.</Text>
             <VStack gap={4}>
               <Field
                 required
@@ -110,6 +113,28 @@ const AddItem = () => {
                   placeholder="Description"
                   type="text"
                 />
+              </Field>
+
+              <Field label="Priority">
+                <select {...register("priority")}>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </Field>
+
+              <Field label="Status">
+                <select {...register("status")}>
+                  <option value="pending">Pending</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </Field>
+
+              <Field label="Due Date">
+                <Input {...register("due_date")} type="datetime-local" />
               </Field>
             </VStack>
           </DialogBody>
@@ -140,4 +165,4 @@ const AddItem = () => {
   )
 }
 
-export default AddItem
+export default AddTodo

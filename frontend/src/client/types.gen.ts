@@ -13,28 +13,6 @@ export type HTTPValidationError = {
     detail?: Array<ValidationError>;
 };
 
-export type ItemCreate = {
-    title: string;
-    description?: (string | null);
-};
-
-export type ItemPublic = {
-    title: string;
-    description?: (string | null);
-    id: string;
-    owner_id: string;
-};
-
-export type ItemsPublic = {
-    data: Array<ItemPublic>;
-    count: number;
-};
-
-export type ItemUpdate = {
-    title?: (string | null);
-    description?: (string | null);
-};
-
 export type Message = {
     message: string;
 };
@@ -49,6 +27,75 @@ export type PrivateUserCreate = {
     password: string;
     full_name: string;
     is_verified?: boolean;
+};
+
+export type TodoCreate = {
+    title: string;
+    description?: (string | null);
+    priority?: TodoPriority;
+    status?: TodoStatus;
+    due_date?: (string | null);
+    todo_list_id?: (string | null);
+};
+
+export type TodoListCreate = {
+    name: string;
+    description?: (string | null);
+    color?: (string | null);
+};
+
+export type TodoListPublic = {
+    name: string;
+    description?: (string | null);
+    color?: (string | null);
+    id: string;
+    created_at: string;
+    updated_at: string;
+    owner_id: string;
+    todos_count?: number;
+};
+
+export type TodoListsPublic = {
+    data: Array<TodoListPublic>;
+    count: number;
+};
+
+export type TodoListUpdate = {
+    name?: (string | null);
+    description?: (string | null);
+    color?: (string | null);
+};
+
+export type TodoPriority = 'low' | 'medium' | 'high' | 'urgent';
+
+export type TodoPublic = {
+    title: string;
+    description?: (string | null);
+    priority?: TodoPriority;
+    status?: TodoStatus;
+    due_date?: (string | null);
+    id: string;
+    created_at: string;
+    updated_at: string;
+    completed_at: (string | null);
+    owner_id: string;
+    todo_list_id: (string | null);
+};
+
+export type TodosPublic = {
+    data: Array<TodoPublic>;
+    count: number;
+};
+
+export type TodoStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
+
+export type TodoUpdate = {
+    title?: (string | null);
+    description?: (string | null);
+    priority?: (TodoPriority | null);
+    status?: (TodoStatus | null);
+    due_date?: (string | null);
+    todo_list_id?: (string | null);
 };
 
 export type Token = {
@@ -107,38 +154,6 @@ export type ValidationError = {
     type: string;
 };
 
-export type ItemsReadItemsData = {
-    limit?: number;
-    skip?: number;
-};
-
-export type ItemsReadItemsResponse = (ItemsPublic);
-
-export type ItemsCreateItemData = {
-    requestBody: ItemCreate;
-};
-
-export type ItemsCreateItemResponse = (ItemPublic);
-
-export type ItemsReadItemData = {
-    id: string;
-};
-
-export type ItemsReadItemResponse = (ItemPublic);
-
-export type ItemsUpdateItemData = {
-    id: string;
-    requestBody: ItemUpdate;
-};
-
-export type ItemsUpdateItemResponse = (ItemPublic);
-
-export type ItemsDeleteItemData = {
-    id: string;
-};
-
-export type ItemsDeleteItemResponse = (Message);
-
 export type LoginLoginAccessTokenData = {
     formData: Body_login_login_access_token;
 };
@@ -170,6 +185,87 @@ export type PrivateCreateUserData = {
 };
 
 export type PrivateCreateUserResponse = (UserPublic);
+
+export type TodoListsReadTodoListsData = {
+    limit?: number;
+    skip?: number;
+};
+
+export type TodoListsReadTodoListsResponse = (TodoListsPublic);
+
+export type TodoListsCreateTodoListData = {
+    requestBody: TodoListCreate;
+};
+
+export type TodoListsCreateTodoListResponse = (TodoListPublic);
+
+export type TodoListsReadTodoListData = {
+    id: string;
+};
+
+export type TodoListsReadTodoListResponse = (TodoListPublic);
+
+export type TodoListsUpdateTodoListData = {
+    id: string;
+    requestBody: TodoListUpdate;
+};
+
+export type TodoListsUpdateTodoListResponse = (TodoListPublic);
+
+export type TodoListsDeleteTodoListData = {
+    id: string;
+};
+
+export type TodoListsDeleteTodoListResponse = (Message);
+
+export type TodoListsGetTodoListTodosData = {
+    id: string;
+    limit?: number;
+    skip?: number;
+};
+
+export type TodoListsGetTodoListTodosResponse = (unknown);
+
+export type TodosReadTodosData = {
+    limit?: number;
+    priority?: (TodoPriority | null);
+    skip?: number;
+    status?: (TodoStatus | null);
+    todoListId?: (string | null);
+};
+
+export type TodosReadTodosResponse = (TodosPublic);
+
+export type TodosCreateTodoData = {
+    requestBody: TodoCreate;
+};
+
+export type TodosCreateTodoResponse = (TodoPublic);
+
+export type TodosReadTodoData = {
+    id: string;
+};
+
+export type TodosReadTodoResponse = (TodoPublic);
+
+export type TodosUpdateTodoData = {
+    id: string;
+    requestBody: TodoUpdate;
+};
+
+export type TodosUpdateTodoResponse = (TodoPublic);
+
+export type TodosDeleteTodoData = {
+    id: string;
+};
+
+export type TodosDeleteTodoResponse = (Message);
+
+export type TodosToggleTodoStatusData = {
+    id: string;
+};
+
+export type TodosToggleTodoStatusResponse = (TodoPublic);
 
 export type UsersReadUsersData = {
     limit?: number;

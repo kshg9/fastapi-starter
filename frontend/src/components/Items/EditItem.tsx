@@ -11,7 +11,12 @@ import { useState } from "react"
 import { type SubmitHandler, useForm } from "react-hook-form"
 import { FaExchangeAlt } from "react-icons/fa"
 
-import { type ApiError, type ItemPublic, ItemsService } from "@/client"
+import {
+  type ApiError,
+  type TodoPublic,
+  TodosService,
+  type TodoUpdate,
+} from "@/client"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 import {
@@ -26,38 +31,37 @@ import {
 } from "../ui/dialog"
 import { Field } from "../ui/field"
 
-interface EditItemProps {
-  item: ItemPublic
+interface EditTodoProps {
+  todo: TodoPublic
 }
 
-interface ItemUpdateForm {
-  title: string
-  description?: string
-}
-
-const EditItem = ({ item }: EditItemProps) => {
+const EditTodo = ({ todo }: EditTodoProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast } = useCustomToast()
+
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<ItemUpdateForm>({
+  } = useForm<TodoUpdate>({
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      ...item,
-      description: item.description ?? undefined,
+      title: todo.title,
+      description: todo.description,
+      priority: todo.priority,
+      status: todo.status,
+      due_date: todo.due_date,
     },
   })
 
   const mutation = useMutation({
-    mutationFn: (data: ItemUpdateForm) =>
-      ItemsService.updateItem({ id: item.id, requestBody: data }),
+    mutationFn: (data: TodoUpdate) =>
+      TodosService.updateTodo({ id: todo.id, requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("Item updated successfully.")
+      showSuccessToast("Todo updated successfully.")
       reset()
       setIsOpen(false)
     },
@@ -65,11 +69,11 @@ const EditItem = ({ item }: EditItemProps) => {
       handleError(err)
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["items"] })
+      queryClient.invalidateQueries({ queryKey: ["todos"] })
     },
   })
 
-  const onSubmit: SubmitHandler<ItemUpdateForm> = async (data) => {
+  const onSubmit: SubmitHandler<TodoUpdate> = async (data) => {
     mutation.mutate(data)
   }
 
@@ -83,16 +87,16 @@ const EditItem = ({ item }: EditItemProps) => {
       <DialogTrigger asChild>
         <Button variant="ghost">
           <FaExchangeAlt fontSize="16px" />
-          Edit Item
+          Edit Todo
         </Button>
       </DialogTrigger>
       <DialogContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Edit Item</DialogTitle>
+            <DialogTitle>Edit Todo</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            <Text mb={4}>Update the item details below.</Text>
+            <Text mb={4}>Update the todo details below.</Text>
             <VStack gap={4}>
               <Field
                 required
@@ -120,6 +124,28 @@ const EditItem = ({ item }: EditItemProps) => {
                   type="text"
                 />
               </Field>
+
+              <Field label="Priority">
+                <select {...register("priority")}>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </Field>
+
+              <Field label="Status">
+                <select {...register("status")}>
+                  <option value="pending">Pending</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </Field>
+
+              <Field label="Due Date">
+                <Input {...register("due_date")} type="datetime-local" />
+              </Field>
             </VStack>
           </DialogBody>
 
@@ -146,4 +172,4 @@ const EditItem = ({ item }: EditItemProps) => {
   )
 }
 
-export default EditItem
+export default EditTodo

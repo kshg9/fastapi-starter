@@ -11,9 +11,9 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { FiSearch } from "react-icons/fi"
 import { z } from "zod"
 
-import { ItemsService } from "@/client"
+import { TodosService } from "@/client"
 import { ItemActionsMenu } from "@/components/Common/ItemActionsMenu"
-import AddItem from "@/components/Items/AddItem"
+import AddTodo from "@/components/Items/AddItem"
 import PendingItems from "@/components/Pending/PendingItems"
 import {
   PaginationItems,
@@ -22,49 +22,49 @@ import {
   PaginationRoot,
 } from "@/components/ui/pagination.tsx"
 
-const itemsSearchSchema = z.object({
+const todosSearchSchema = z.object({
   page: z.number().catch(1),
 })
 
 const PER_PAGE = 5
 
-function getItemsQueryOptions({ page }: { page: number }) {
+function getTodosQueryOptions({ page }: { page: number }) {
   return {
     queryFn: () =>
-      ItemsService.readItems({ skip: (page - 1) * PER_PAGE, limit: PER_PAGE }),
-    queryKey: ["items", { page }],
+      TodosService.readTodos({ skip: (page - 1) * PER_PAGE, limit: PER_PAGE }),
+    queryKey: ["todos", { page }],
   }
 }
 
 export const Route = createFileRoute("/_layout/items")({
-  component: Items,
-  validateSearch: (search) => itemsSearchSchema.parse(search),
+  component: Todos,
+  validateSearch: (search) => todosSearchSchema.parse(search),
 })
 
-function ItemsTable() {
+function TodosTable() {
   const navigate = useNavigate({ from: Route.fullPath })
   const { page } = Route.useSearch()
 
   const { data, isLoading, isPlaceholderData } = useQuery({
-    ...getItemsQueryOptions({ page }),
+    ...getTodosQueryOptions({ page }),
     placeholderData: (prevData) => prevData,
   })
 
   const setPage = (page: number) => {
     navigate({
       to: "/items",
-      search: (prev) => ({ ...prev, page }),
+      search: (prev: any) => ({ ...prev, page }),
     })
   }
 
-  const items = data?.data.slice(0, PER_PAGE) ?? []
+  const todos = data?.data?.slice(0, PER_PAGE) ?? []
   const count = data?.count ?? 0
 
   if (isLoading) {
     return <PendingItems />
   }
 
-  if (items.length === 0) {
+  if (todos.length === 0) {
     return (
       <EmptyState.Root>
         <EmptyState.Content>
@@ -72,9 +72,9 @@ function ItemsTable() {
             <FiSearch />
           </EmptyState.Indicator>
           <VStack textAlign="center">
-            <EmptyState.Title>You don't have any items yet</EmptyState.Title>
+            <EmptyState.Title>You don't have any todos yet</EmptyState.Title>
             <EmptyState.Description>
-              Add a new item to get started
+              Add a new todo to get started
             </EmptyState.Description>
           </VStack>
         </EmptyState.Content>
@@ -87,30 +87,66 @@ function ItemsTable() {
       <Table.Root size={{ base: "sm", md: "md" }}>
         <Table.Header>
           <Table.Row>
-            <Table.ColumnHeader w="sm">ID</Table.ColumnHeader>
             <Table.ColumnHeader w="sm">Title</Table.ColumnHeader>
             <Table.ColumnHeader w="sm">Description</Table.ColumnHeader>
+            <Table.ColumnHeader w="sm">Priority</Table.ColumnHeader>
+            <Table.ColumnHeader w="sm">Status</Table.ColumnHeader>
+            <Table.ColumnHeader w="sm">Due Date</Table.ColumnHeader>
             <Table.ColumnHeader w="sm">Actions</Table.ColumnHeader>
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {items?.map((item) => (
-            <Table.Row key={item.id} opacity={isPlaceholderData ? 0.5 : 1}>
+          {todos?.map((todo: any) => (
+            <Table.Row key={todo.id} opacity={isPlaceholderData ? 0.5 : 1}>
               <Table.Cell truncate maxW="sm">
-                {item.id}
-              </Table.Cell>
-              <Table.Cell truncate maxW="sm">
-                {item.title}
+                {todo.title}
               </Table.Cell>
               <Table.Cell
-                color={!item.description ? "gray" : "inherit"}
+                color={!todo.description ? "gray" : "inherit"}
                 truncate
                 maxW="30%"
               >
-                {item.description || "N/A"}
+                {todo.description || "N/A"}
               </Table.Cell>
               <Table.Cell>
-                <ItemActionsMenu item={item} />
+                <span
+                  style={{
+                    textTransform: "capitalize",
+                    color:
+                      todo.priority === "urgent"
+                        ? "red"
+                        : todo.priority === "high"
+                          ? "orange"
+                          : todo.priority === "medium"
+                            ? "blue"
+                            : "gray",
+                  }}
+                >
+                  {todo.priority}
+                </span>
+              </Table.Cell>
+              <Table.Cell>
+                <span
+                  style={{
+                    textTransform: "capitalize",
+                    color:
+                      todo.status === "completed"
+                        ? "green"
+                        : todo.status === "in_progress"
+                          ? "blue"
+                          : "gray",
+                  }}
+                >
+                  {todo.status.replace("_", " ")}
+                </span>
+              </Table.Cell>
+              <Table.Cell color={!todo.due_date ? "gray" : "inherit"}>
+                {todo.due_date
+                  ? new Date(todo.due_date).toLocaleDateString()
+                  : "No Due Date"}
+              </Table.Cell>
+              <Table.Cell>
+                <ItemActionsMenu item={todo} />
               </Table.Cell>
             </Table.Row>
           ))}
@@ -133,14 +169,14 @@ function ItemsTable() {
   )
 }
 
-function Items() {
+function Todos() {
   return (
     <Container maxW="full">
       <Heading size="lg" pt={12}>
-        Items Management
+        Todo Management
       </Heading>
-      <AddItem />
-      <ItemsTable />
+      <AddTodo />
+      <TodosTable />
     </Container>
   )
 }

@@ -1,6 +1,7 @@
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
+from scalar_fastapi import get_scalar_api_reference
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.main import api_router
@@ -31,3 +32,13 @@ if settings.all_cors_origins:
     )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+
+@app.get("/scalar", include_in_schema=False, tags=["docs"])
+async def scalar_html():
+    return get_scalar_api_reference(
+        # Your OpenAPI document
+        openapi_url=app.openapi_url,
+        # Avoid CORS issues (optional)
+        scalar_proxy_url="https://proxy.scalar.com",
+    )

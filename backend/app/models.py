@@ -1,4 +1,6 @@
 import uuid
+from datetime import datetime
+from enum import Enum
 
 from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
@@ -43,7 +45,7 @@ class UpdatePassword(SQLModel):
 class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
-    items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
+    todos: list["Todo"] = Relationship(back_populates="owner", cascade_delete=True)
 
 
 # Properties to return via API, id is always required
@@ -56,39 +58,68 @@ class UsersPublic(SQLModel):
     count: int
 
 
-# Shared properties
-class ItemBase(SQLModel):
+# Todo Priority Enum
+class TodoPriority(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    URGENT = "urgent"
+
+
+# Todo Status Enum
+class TodoStatus(str, Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+
+# Shared properties for Todo
+class TodoBase(SQLModel):
     title: str = Field(min_length=1, max_length=255)
-    description: str | None = Field(default=None, max_length=255)
+    description: str | None = Field(default=None, max_length=1000)
+    priority: TodoPriority = Field(default=TodoPriority.MEDIUM)
+    status: TodoStatus = Field(default=TodoStatus.PENDING)
+    due_date: datetime | None = Field(default=None)
 
 
-# Properties to receive on item creation
-class ItemCreate(ItemBase):
+# Properties to receive on Todo creation
+class TodoCreate(TodoBase):
     pass
 
 
-# Properties to receive on item update
-class ItemUpdate(ItemBase):
-    title: str | None = Field(default=None, min_length=1, max_length=255)  # type: ignore
+# Properties to receive on Todo update
+class TodoUpdate(SQLModel):
+    title: str | None = Field(default=None, min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=1000)
+    priority: TodoPriority | None = Field(default=None)
+    status: TodoStatus | None = Field(default=None)
+    due_date: datetime | None = Field(default=None)
 
 
-# Database model, database table inferred from class name
-class Item(ItemBase, table=True):
+# Database model for Todo
+class Todo(TodoBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    completed_at: datetime | None = Field(default=None)
     owner_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE"
     )
-    owner: User | None = Relationship(back_populates="items")
+    owner: User | None = Relationship(back_populates="todos")
 
 
-# Properties to return via API, id is always required
-class ItemPublic(ItemBase):
+# Properties to return via API for Todo
+class TodoPublic(TodoBase):
     id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+    completed_at: datetime | None
     owner_id: uuid.UUID
 
 
-class ItemsPublic(SQLModel):
-    data: list[ItemPublic]
+class TodosPublic(SQLModel):
+    data: list[TodoPublic]
     count: int
 
 
